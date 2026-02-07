@@ -5,23 +5,27 @@
         {{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}
       </h2>
       
-      <form @submit.prevent="handleSubmit">
+      <Form @submit="handleSubmit" :validation-schema="schema" :initial-values="formValues" v-slot="{ errors }">
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium">Nombre</label>
-            <input v-model="form.name" required class="w-full border p-2 rounded" />
+            <Field name="name" type="text" class="w-full border p-2 rounded" :class="{ 'border-red-500': errors.name }" />
+            <ErrorMessage name="name" class="text-red-500 text-xs mt-1" />
           </div>
           <div>
             <label class="block text-sm font-medium">Username</label>
-            <input v-model="form.username" required class="w-full border p-2 rounded" />
+            <Field name="username" type="text" class="w-full border p-2 rounded" :class="{ 'border-red-500': errors.username }" />
+            <ErrorMessage name="username" class="text-red-500 text-xs mt-1" />
           </div>
           <div>
             <label class="block text-sm font-medium">Email</label>
-            <input v-model="form.email" type="email" required class="w-full border p-2 rounded" />
+            <Field name="email" type="email" class="w-full border p-2 rounded" :class="{ 'border-red-500': errors.email }" />
+            <ErrorMessage name="email" class="text-red-500 text-xs mt-1" />
           </div>
           <div>
             <label class="block text-sm font-medium">Teléfono</label>
-            <input v-model="form.phone" required class="w-full border p-2 rounded" />
+            <Field name="phone" type="text" class="w-full border p-2 rounded" :class="{ 'border-red-500': errors.phone }" />
+            <ErrorMessage name="phone" class="text-red-500 text-xs mt-1" />
           </div>
         </div>
 
@@ -33,13 +37,15 @@
             Guardar
           </button>
         </div>
-      </form>
+      </Form>
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, watch, computed } from 'vue';
+import { computed } from 'vue';
+import { Form, Field, ErrorMessage } from 'vee-validate';
+import * as yup from 'yup';
 
 const props = defineProps({
   isOpen: Boolean,
@@ -48,31 +54,27 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 
-// Estado local del formulario
-const form = reactive({ name: '', username: '', email: '', phone: '' });
+// Esquema de validación con Yup
+const schema = yup.object({
+  name: yup.string().required('El nombre es obligatorio'),
+  username: yup.string().required('El username es obligatorio'),
+  email: yup.string().email('Email inválido').required('El email es obligatorio'),
+  phone: yup.string().required('El teléfono es obligatorio')
+});
 
 // Detectar si estamos editando
 const isEditing = computed(() => !!props.userToEdit);
 
-// Rellenar formulario cuando cambia el usuario a editar [cite: 34]
-watch(() => props.userToEdit, (newUser) => {
-  if (newUser) {
-    Object.assign(form, newUser);
-  } else {
-    // Resetear form
-    Object.assign(form, { name: '', username: '', email: '', phone: '' });
+// Valores iniciales calculados
+const formValues = computed(() => {
+  if (props.userToEdit) {
+    return { ...props.userToEdit };
   }
+  return { name: '', username: '', email: '', phone: '' };
 });
 
-const handleSubmit = () => {
-  // Validación extra de email [cite: 21]
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(form.email)) {
-    alert("Email inválido");
-    return;
-  }
-  
-  // Emitimos el evento 'save' con los datos limpios
-  emit('save', { ...form, id: props.userToEdit?.id });
+const handleSubmit = (values) => {
+  // VeeValidate ya validó, 'values' contiene los datos limpios
+  emit('save', { ...values, id: props.userToEdit?.id });
 };
 </script>
