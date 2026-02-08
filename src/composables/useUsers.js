@@ -20,7 +20,6 @@ export function useUsers() {
 
     // 2. Agregar usuario (Local) [cite: 22]
     const addUser = (userData) => {
-        // Generación automática de ID [cite: 23]
         const maxId = users.value.length > 0
             ? Math.max(...users.value.map(u => u.id))
             : 0;
@@ -28,12 +27,9 @@ export function useUsers() {
         users.value.push({ ...userData, id: maxId + 1 });
     };
 
-    // 3. Editar usuario (Local) [cite: 35]
     const updateUser = (userData) => {
-        // Ensure ID comparison matches types (loose equality or strict if confident)
         const index = users.value.findIndex(u => u.id == userData.id);
         if (index !== -1) {
-            // Merge existing user data with updates to preserve other fields
             users.value[index] = { ...users.value[index], ...userData };
             console.log('User updated:', users.value[index]);
         } else {
@@ -41,7 +37,6 @@ export function useUsers() {
         }
     };
 
-    // 4. Eliminar usuario (Local) [cite: 45]
     const deleteUser = (id) => {
         users.value = users.value.filter(u => u.id !== id);
     };
